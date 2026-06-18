@@ -1,0 +1,18 @@
+# Supabase project config for the Shopify blog automation functions.
+# verify_jwt = false lets the functions be invoked by pg_cron (net.http_post)
+# and by your own scheduler without a user JWT. Auth to external APIs is still
+# enforced inside each function via the secrets you set with `supabase secrets set`.
+
+project_id = "your-project-ref"
+
+[functions.shopify-blog-automation-ultra-seo]
+verify_jwt = false
+
+[functions.shopify-blog-image-generator]
+verify_jwt = false
+
+[functions.blog-internal-linker]
+verify_jwt = false
+
+[functions.blog-article-refresher]
+verify_jwt = false
