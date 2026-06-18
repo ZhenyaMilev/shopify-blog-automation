@@ -1,0 +1,262 @@
+{% comment %}
+  SEO Schema Markup - JSON-LD
+  Added by MILEDEVS SEO optimization
+{% endcomment %}
+
+{%- comment -%} Organization Schema - all pages {%- endcomment -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "MILEDEVS",
+  "url": "https://www.miledevs.com",
+  "logo": "https://www.miledevs.com/cdn/shop/files/logo.png",
+  "description": "Shopify Select Partner agency specializing in e-commerce development, optimization, and support.",
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+380730071077",
+    "email": "miledevelopment@gmail.com",
+    "contactType": "customer service",
+    "availableLanguage": ["English", "Ukrainian"]
+  },
+  "sameAs": [
+    "https://t.me/shopify_evgene"
+  ],
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Zhytomyr",
+    "addressCountry": "UA"
+  }
+}
+</script>
+
+{%- comment -%} WebSite Schema - homepage only {%- endcomment -%}
+{%- if request.page_type == "index" -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "MILEDEVS",
+  "url": "https://www.miledevs.com",
+  "description": "Shopify Select Partner agency with 5+ years of experience. We build high-converting online stores, provide custom development, optimization, and ongoing support for e-commerce brands worldwide.",
+  "publisher": {
+    "@type": "Organization",
+    "name": "MILEDEVS",
+    "url": "https://www.miledevs.com"
+  },
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://www.miledevs.com/search?q={search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+{%- endif -%}
+
+{%- comment -%} BreadcrumbList Schema - all pages {%- endcomment -%}
+{%- unless request.page_type == "index" -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "{{ shop.url }}"
+    }
+    {%- if request.page_type == "page" -%}
+    ,{
+      "@type": "ListItem",
+      "position": 2,
+      "name": "{{ page.title }}",
+      "item": "{{ shop.url }}{{ page.url }}"
+    }
+    {%- elsif request.page_type == "article" -%}
+    ,{
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "{{ shop.url }}/blogs/{{ article.blog.handle }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "{{ article.title }}",
+      "item": "{{ shop.url }}{{ article.url }}"
+    }
+    {%- elsif request.page_type == "blog" -%}
+    ,{
+      "@type": "ListItem",
+      "position": 2,
+      "name": "{{ blog.title }}",
+      "item": "{{ shop.url }}{{ blog.url }}"
+    }
+    {%- endif -%}
+  ]
+}
+</script>
+{%- endunless -%}
+
+{%- comment -%} FAQPage Schema - homepage only {%- endcomment -%}
+{%- if request.page_type == "index" -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How long does it take to build a Shopify store?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Most projects launch within 2-4 weeks from the brief. The exact timeline depends on scope. We share a detailed project timeline before we start, so you always know what to expect."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do you work with existing stores or only new builds?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Both. We handle full builds from scratch, redesigns of existing stores, performance optimization, migration from other platforms to Shopify, and ongoing development."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What makes MILEDEVS different from other Shopify developers?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We are a Shopify Select Partner, a status given to a small number of agencies worldwide. We focus on business outcomes: conversions, average order value, and long-term growth. No templates, no guesswork."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do you make sure the store actually converts?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We apply proven CRO principles from day one: clear hierarchy, fast load times, trust signals, and optimized checkout flow. Results are measurable, not assumed."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is included in post-launch support?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "After launch, we stay available for bug fixes, minor updates, and technical questions at no extra charge for an agreed period. Beyond that, we offer ongoing retainer support for stores that need regular updates, A/B testing, new feature development, or performance monitoring."
+      }
+    }
+  ]
+}
+</script>
+{%- endif -%}
+
+{%- comment -%} Article Schema - blog posts {%- endcomment -%}
+{%- if request.page_type == "article" -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": {{ article.title | json }},
+  "description": {{ article.excerpt_or_content | strip_html | truncate: 160 | json }},
+  "url": "{{ shop.url }}{{ article.url }}",
+  "datePublished": "{{ article.published_at | date: "%Y-%m-%dT%H:%M:%S%z" }}",
+  "dateModified": "{{ article.updated_at | date: "%Y-%m-%dT%H:%M:%S%z" }}",
+  "author": {
+    "@type": "Organization",
+    "name": "MILEDEVS"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "MILEDEVS",
+    "url": "https://www.miledevs.com"
+  }
+  {%- if article.image -%}
+  ,"image": "https:{{ article.image | image_url: width: 1200 }}"
+  {%- endif -%}
+}
+</script>
+{%- endif -%}
+
+{%- comment -%} Service Schema - services page {%- endcomment -%}
+{%- if page.handle == "services" -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "Shopify Development",
+  "provider": {
+    "@type": "Organization",
+    "name": "MILEDEVS",
+    "url": "https://www.miledevs.com"
+  },
+  "areaServed": "Worldwide",
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Shopify Development Services",
+    "itemListElement": [
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Shopify Store Setup From Scratch"}},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Custom Shopify Store Design"}},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "App Integration for Shopify"}},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Performance Optimization"}},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Conversion & UX Optimization Audit"}},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Ongoing Support and Maintenance"}},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Platform Migration to Shopify"}},
+      {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Shopify Automation"}}
+    ]
+  }
+}
+</script>
+{%- endif -%}
+
+{%- comment -%} ContactPage + LocalBusiness Schema - contact page {%- endcomment -%}
+{%- if page.handle == "contact" -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ContactPage",
+  "name": "Contact MILEDEVS",
+  "description": "Get in touch with MILEDEVS — Shopify Select Partner agency. We are ready to discuss your e-commerce project.",
+  "url": "https://www.miledevs.com/pages/contact",
+  "mainEntity": {
+    "@type": "LocalBusiness",
+    "name": "MILEDEVS",
+    "description": "Shopify Select Partner agency specializing in e-commerce development, optimization, and support.",
+    "url": "https://www.miledevs.com",
+    "logo": "https://www.miledevs.com/cdn/shop/files/logo.png",
+    "telephone": "+380730071077",
+    "email": "miledevelopment@gmail.com",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Zhytomyr",
+      "addressCountry": "UA"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "50.2547",
+      "longitude": "28.6587"
+    },
+    "openingHoursSpecification": {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      "opens": "09:00",
+      "closes": "18:00"
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+380730071077",
+      "email": "miledevelopment@gmail.com",
+      "contactType": "customer service",
+      "availableLanguage": ["English", "Ukrainian"]
+    },
+    "sameAs": [
+      "https://t.me/shopify_evgene"
+    ],
+    "priceRange": "$$"
+  }
+}
+</script>
+{%- endif -%}

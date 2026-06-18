@@ -1,0 +1,955 @@
+{{ 'section-blog-post.css' | asset_url | stylesheet_tag }}
+
+<style>
+  /* ===== MILEDEVS article layout: TOC left (sticky) + content right ===== */
+  .article-main-grid {
+    display: grid;
+    grid-template-columns: 264px minmax(0, 1fr);
+    gap: 56px;
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    align-items: start;
+  }
+
+  .article-main-grid__left {  /* title + content -> right column */
+    min-width: 0;
+    order: 2;
+  }
+
+  .article-main-grid__right { /* TOC -> left column, sticky */
+    order: 1;
+    align-self: start;
+    position: sticky;
+    top: 110px;
+  }
+
+  .article-main-grid.no-toc { grid-template-columns: minmax(0, 1fr); }
+  .article-main-grid.no-toc .article-main-grid__right { display: none; }
+
+  /* ----- meta row (category / date / reading time) ----- */
+  .article-meta-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 0 0 16px; }
+  .article-cat-pill {
+    display: inline-block; background: rgba(212,255,0,0.1); border: 1px solid rgba(212,255,0,0.28);
+    color: #d4ff00; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em;
+    padding: 5px 12px; border-radius: 100px;
+  }
+  .article-meta-item { display: inline-flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.55); font-size: 13.5px; }
+  .article-meta-item svg { opacity: 0.7; }
+
+  /* ----- author byline ----- */
+  .article-byline { display: flex; align-items: center; gap: 12px; margin: 22px 0 4px; }
+  .article-byline__avatar {
+    width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #d4ff00; color: #000; font-weight: 700; font-size: 17px;
+  }
+  .article-byline__name { display: block; color: #fff; font-weight: 600; font-size: 15px; line-height: 1.25; }
+  .article-byline__role { display: block; color: rgba(255,255,255,0.5); font-size: 13px; }
+
+  .article-main-grid__left .article-template__title { text-wrap: balance; margin-top: 4px; }
+
+  /* ----- Table of contents ----- */
+  .article-toc { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 22px 20px; }
+  .article-toc__title { color: #fff; font-size: 18px; font-weight: 600; margin: 0 0 12px; }
+  .article-toc__list { list-style: none; counter-reset: toc; margin: 0; padding: 0; }
+  .article-toc__item { counter-increment: toc; }
+  /* color/decoration forced with !important to beat the theme's a:link/:visited link color */
+  .article-toc__link,
+  .article-toc__link:link,
+  .article-toc__link:visited {
+    display: flex; gap: 12px; align-items: baseline; padding: 7px 0;
+    color: rgba(255,255,255,0.56) !important; font-size: 14px; line-height: 1.4;
+    text-decoration: none !important; border: 0 !important; transition: color 0.2s;
+  }
+  .article-toc__link::before {
+    content: counter(toc) "."; color: rgba(255,255,255,0.32); font-variant-numeric: tabular-nums;
+    flex-shrink: 0; min-width: 18px; transition: color 0.2s;
+  }
+  .article-toc__link:hover { color: #fff !important; }
+  .article-toc__item.is-active .article-toc__link { color: #fff !important; font-weight: 500; }
+  .article-toc__item.is-active .article-toc__link::before { color: #d4ff00; }
+
+  /* ----- CTA banner (sits before the FAQ) ----- */
+  .article-cta-banner {
+    margin: 46px 0; background: linear-gradient(135deg, #14171b, #0a0a0a);
+    border: 1px solid rgba(212,255,0,0.2); border-radius: 18px; padding: 30px 32px;
+    display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+  }
+  .article-cta-banner__heading { color: #fff; font-size: 21px; font-weight: 600; line-height: 1.25; margin: 0 0 6px; }
+  .article-cta-banner__sub { color: rgba(255,255,255,0.55); font-size: 14px; margin: 0; max-width: 48ch; }
+  .article-cta-banner__btn {
+    display: inline-flex; align-items: center; gap: 8px; background: #d4ff00; color: #000; border: none;
+    border-radius: 12px; padding: 15px 26px; font-size: 14px; font-weight: 600; font-family: inherit;
+    cursor: pointer; text-decoration: none; white-space: nowrap; transition: filter 0.2s;
+  }
+  .article-cta-banner__btn:hover { filter: brightness(1.08); }
+
+  /* In-content auto-CTA (blog automation injects inline-styled #0f172a slate box) -> re-skin to brand.
+     Its button text was invisible (lime-on-lime) because md-dark forces .rte a -> #d4ff00; fixed here. */
+  .article-template__content div[style*="0f172a"] {
+    background: #0d0f12 !important; border: 1px solid rgba(212,255,0,0.18) !important;
+  }
+  .article-template__content div[style*="0f172a"] a[style*="background"] {
+    background: #d4ff00 !important; color: #0a0a0a !important; text-decoration: none !important;
+  }
+
+  /* ----- Related posts ----- */
+  .article-related { max-width: var(--page-width); margin: 76px auto 0; padding: 0 1.5rem; }
+  .article-related__head { color: #fff; font-size: 26px; font-weight: 600; margin: 0 0 22px; }
+  .article-related__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .article-related__card {
+    display: flex; flex-direction: column; background: #0d0f12; border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px; overflow: hidden; text-decoration: none; transition: border-color 0.25s, transform 0.25s;
+  }
+  .article-related__card:hover { border-color: rgba(212,255,0,0.4); transform: translateY(-4px); }
+  .article-related__img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: #16191d; display: block; }
+  .article-related__body { padding: 18px 20px 22px; }
+  .article-related__cat { display: block; color: #d4ff00; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .article-related__title { display: block; color: #fff; font-size: 16px; font-weight: 600; line-height: 1.35; }
+
+  @media (max-width: 900px) {
+    .article-main-grid { grid-template-columns: 1fr; gap: 0; }
+    .article-main-grid__right { position: static; order: -1; margin-bottom: 26px; }
+    .article-related__grid { grid-template-columns: 1fr; }
+    .article-cta-banner { padding: 22px; flex-direction: column; align-items: flex-start; }
+  }
+
+  /* === Blog FAQ Accordion === */
+  .article-faq-accordion {
+    margin-top: 1.5rem;
+  }
+
+  .article-faq-accordion details {
+    border-bottom: 1px solid rgba(var(--color-foreground), 0.12);
+    overflow: hidden;
+  }
+
+  .article-faq-accordion details:first-of-type {
+    border-top: 1px solid rgba(var(--color-foreground), 0.12);
+  }
+
+  .article-faq-accordion details summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.4rem 0;
+    cursor: pointer;
+    list-style: none;
+    gap: 1rem;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .article-faq-accordion details summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .article-faq-accordion details summary::marker {
+    display: none;
+    content: '';
+  }
+
+  .article-faq-accordion .faq-accordion__question {
+    font-weight: 700;
+    color: rgb(var(--color-foreground));
+    font-size: 1.15rem;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  @media screen and (min-width: 750px) {
+    .article-faq-accordion .faq-accordion__question {
+      font-size: 1.25rem;
+    }
+  }
+
+  .article-faq-accordion .faq-accordion__icon {
+    position: relative;
+    flex-shrink: 0;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 50%;
+    border: 1.5px solid rgba(var(--color-foreground), 0.2);
+    transition: transform 0.3s ease, border-color 0.3s ease;
+  }
+
+  .article-faq-accordion .faq-accordion__icon::before,
+  .article-faq-accordion .faq-accordion__icon::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background-color: rgb(var(--color-foreground));
+    transform: translate(-50%, -50%);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+
+  .article-faq-accordion .faq-accordion__icon::before {
+    width: 1rem;
+    height: 2px;
+  }
+
+  .article-faq-accordion .faq-accordion__icon::after {
+    width: 2px;
+    height: 1rem;
+  }
+
+  .article-faq-accordion details[open] .faq-accordion__icon {
+    border-color: rgb(var(--color-foreground));
+  }
+
+  .article-faq-accordion details[open] .faq-accordion__icon::after {
+    transform: translate(-50%, -50%) rotate(90deg);
+    opacity: 0;
+  }
+
+  .article-faq-accordion .faq-accordion__answer {
+    padding: 0 0 1.4rem 0;
+    color: rgba(var(--color-foreground), 0.7);
+    font-size: 1rem;
+    line-height: 1.7;
+    max-width: 90%;
+  }
+
+  .article-faq-accordion .faq-accordion__answer p {
+    margin: 0;
+  }
+
+  .article-faq-accordion .faq-accordion__answer p + p {
+    margin-top: 0.8rem;
+  }
+
+  .article-faq-accordion .faq-accordion__answer a {
+    color: rgb(var(--color-foreground));
+    text-decoration: underline;
+  }
+
+  /* Smooth open animation */
+  .article-faq-accordion details .faq-accordion__answer {
+    animation: faqFadeIn 0.3s ease;
+  }
+
+  @keyframes faqFadeIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media screen and (hover: hover) {
+    .article-faq-accordion details:not([open]) summary:hover .faq-accordion__icon {
+      border-color: rgb(var(--color-foreground));
+      transform: scale(1.08);
+    }
+  }
+
+  /* Dark blog: FAQ question is a <span> so the theme's p/li light-text rules miss it -> force crisp white + visible +/- icon */
+  body.template-article .article-faq-accordion .faq-accordion__question { color: #fff !important; }
+  body.template-article .article-faq-accordion .faq-accordion__answer { color: rgba(255,255,255,0.62) !important; }
+  body.template-article .article-faq-accordion .faq-accordion__icon { border-color: rgba(255,255,255,0.34) !important; }
+  body.template-article .article-faq-accordion .faq-accordion__icon::before,
+  body.template-article .article-faq-accordion .faq-accordion__icon::after { background-color: #fff !important; }
+  body.template-article .article-faq-accordion details,
+  body.template-article .article-faq-accordion details:first-of-type { border-color: rgba(255,255,255,0.12) !important; }
+</style>
+
+<article class="article-template">
+  {%- liquid
+    assign _words = article.content | strip_html | split: ' ' | size
+    assign read_time = _words | divided_by: 200 | at_least: 1
+    assign author_name = section.settings.author_name | default: article.author
+    assign share_url = request.origin | append: article.url
+  -%}
+
+  {%- comment -%} ===== Featured image (full width hero) ===== {%- endcomment -%}
+  {%- if article.image -%}
+    <div class="article-template__hero-container{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}">
+      <div
+        class="article-template__hero-adapt media"
+        style="padding-bottom: {{ 1 | divided_by: article.image.aspect_ratio | times: 100 }}%;"
+      >
+        <img
+          srcset="
+            {% if article.image.width >= 350 %}{{ article.image | image_url: width: 350 }} 350w,{% endif %}
+            {% if article.image.width >= 750 %}{{ article.image | image_url: width: 750 }} 750w,{% endif %}
+            {% if article.image.width >= 1100 %}{{ article.image | image_url: width: 1100 }} 1100w,{% endif %}
+            {% if article.image.width >= 1500 %}{{ article.image | image_url: width: 1500 }} 1500w,{% endif %}
+            {% if article.image.width >= 2200 %}{{ article.image | image_url: width: 2200 }} 2200w,{% endif %}
+            {{ article.image | image_url }} {{ article.image.width }}w
+          "
+          sizes="(min-width: {{ settings.page_width }}px) {{ settings.page_width | minus: 100 }}px, (min-width: 750px) calc(100vw - 10rem), 100vw"
+          src="{{ article.image | image_url: width: 1100 }}"
+          loading="eager"
+          fetchpriority="high"
+          width="{{ article.image.width }}"
+          height="{{ article.image.height }}"
+          alt="{{ article.image.alt | escape }}"
+        >
+      </div>
+    </div>
+  {%- endif -%}
+
+  {%- comment -%} ===== Body: TOC (left) + content (right) ===== {%- endcomment -%}
+  <div class="article-main-grid" id="articleGrid">
+    <aside class="article-main-grid__right">
+      <nav class="article-toc" id="articleToc" aria-label="Table of contents" hidden>
+        <div class="article-toc__title">Contents</div>
+        <ol class="article-toc__list"></ol>
+      </nav>
+    </aside>
+
+    <div class="article-main-grid__left">
+      <header class="{% if settings.animations_reveal_on_scroll %}scroll-trigger animate--fade-in{% endif %}">
+        <div class="article-meta-row">
+          {%- if article.tags.size > 0 -%}
+            <span class="article-cat-pill">{{ article.tags.first }}</span>
+          {%- endif -%}
+          <span class="article-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            {{ article.published_at | time_tag: format: 'date' }}
+          </span>
+          <span class="article-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            {{ read_time }} min read
+          </span>
+        </div>
+
+        <h1 class="article-template__title">{{ article.title | escape }}</h1>
+
+        <div class="article-byline">
+          {%- if section.settings.author_avatar != blank -%}
+            <img class="article-byline__avatar" src="{{ section.settings.author_avatar | image_url: width: 96 }}" width="44" height="44" loading="lazy" alt="{{ author_name | escape }}">
+          {%- else -%}
+            <span class="article-byline__avatar">{{ author_name | strip | slice: 0 | upcase }}</span>
+          {%- endif -%}
+          <span>
+            <span class="article-byline__name">{{ author_name }}</span>
+            {%- if section.settings.author_role != blank -%}
+              <span class="article-byline__role">{{ section.settings.author_role }}</span>
+            {%- endif -%}
+          </span>
+        </div>
+      </header>
+
+      {%- comment -%} optional blocks: share + apps {%- endcomment -%}
+      {%- for block in section.blocks -%}
+        {%- case block.type -%}
+          {%- when 'share' -%}
+            <div class="article-template__social-sharing{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}" {{ block.shopify_attributes }}>
+              {% render 'share-button', block: block, share_link: share_url %}
+            </div>
+          {%- when '@app' -%}
+            {% render block %}
+        {%- endcase -%}
+      {%- endfor -%}
+
+      <div class="article-template__content rte{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
+        {{ article.content }}
+      </div>
+
+      {%- comment -%} CTA banner — JS relocates it to just before the FAQ ===== {%- endcomment -%}
+      <div class="article-cta-banner" id="articleCtaBanner">
+        <div class="article-cta-banner__text">
+          <div class="article-cta-banner__heading">{{ section.settings.cta_text }}</div>
+          {%- if section.settings.cta_bold != blank -%}
+            <div class="article-cta-banner__sub">{{ section.settings.cta_bold }}</div>
+          {%- endif -%}
+        </div>
+        {%- if section.settings.cta_link != blank -%}
+          <a class="article-cta-banner__btn" href="{{ section.settings.cta_link }}">
+            {{ section.settings.cta_btn }}
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 7h12M7 1l6 6-6 6"/></svg>
+          </a>
+        {%- else -%}
+          <button type="button" class="article-cta-banner__btn" onclick="if(window.__openAuditPopup)window.__openAuditPopup();">
+            {{ section.settings.cta_btn }}
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 7h12M7 1l6 6-6 6"/></svg>
+          </button>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+
+  {%- comment -%} ===== Related posts ===== {%- endcomment -%}
+  {%- assign rel_shown = 0 -%}
+  {%- capture rel_cards -%}
+    {%- for art in blog.articles -%}
+      {%- if art.id != article.id and rel_shown < 3 -%}
+        <a href="{{ art.url }}" class="article-related__card">
+          {%- if art.image -%}
+            <img class="article-related__img" src="{{ art.image | image_url: width: 640 }}" width="640" height="400" loading="lazy" alt="{{ art.image.alt | escape }}">
+          {%- else -%}
+            <span class="article-related__img"></span>
+          {%- endif -%}
+          <span class="article-related__body">
+            {%- if art.tags.size > 0 -%}<span class="article-related__cat">{{ art.tags.first }}</span>{%- endif -%}
+            <span class="article-related__title">{{ art.title | escape }}</span>
+          </span>
+        </a>
+        {%- assign rel_shown = rel_shown | plus: 1 -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endcapture -%}
+  {%- if rel_shown > 0 -%}
+    <div class="article-related{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
+      <div class="article-related__head">Related Posts</div>
+      <div class="article-related__grid">{{ rel_cards }}</div>
+    </div>
+  {%- endif -%}
+
+  <div class="article-template__back element-margin-top center{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
+    <a href="{{ blog.url }}" class="article-template__link link animate-arrow">
+      <span class="icon-wrap">
+        <span class="svg-wrapper">
+          {{- 'icon-arrow.svg' | inline_asset_content -}}
+        </span>
+      </span>
+      {{ 'blogs.article.back_to_blog' | t: title: blog.title | escape }}
+    </a>
+  </div>
+
+  {%- if blog.comments_enabled? -%}
+    <div class="article-template__comment-wrapper background-secondary">
+      <div
+        id="comments"
+        class="page-width page-width--narrow{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+      >
+        {%- if article.comments_count > 0 -%}
+          {%- assign anchorId = '#Comments-' | append: article.id -%}
+          <h2 id="Comments-{{ article.id }}" tabindex="-1">
+            {{ 'blogs.article.comments' | t: count: article.comments_count }}
+          </h2>
+          {% paginate article.comments by 5 %}
+            <div class="article-template__comments">
+              {%- if comment.status == 'pending' and comment.content -%}
+                <article id="{{ comment.id }}" class="article-template__comments-comment">
+                  {{ comment.content }}
+                  <footer class="right">
+                    <span class="circle-divider caption-with-letter-spacing">{{ comment.author }}</span>
+                  </footer>
+                </article>
+              {%- endif -%}
+              {%- for comment in article.comments -%}
+                <article id="{{ comment.id }}" class="article-template__comments-comment">
+                  {{ comment.content }}
+                  <footer class="right">
+                    <span class="circle-divider caption-with-letter-spacing">{{ comment.author }}</span
+                    ><span class="caption-with-letter-spacing">
+                      {{- comment.created_at | time_tag: format: 'date' -}}
+                    </span>
+                  </footer>
+                </article>
+              {%- endfor -%}
+              {% render 'pagination', paginate: paginate, anchor: anchorId %}
+            </div>
+          {% endpaginate %}
+        {%- endif -%}
+        {% form 'new_comment', article %}
+          {%- liquid
+            assign post_message = 'blogs.article.success'
+            if blog.moderated? and comment.status == 'unapproved'
+              assign post_message = 'blogs.article.success_moderated'
+            endif
+          -%}
+          <h2>{{ 'blogs.article.comment_form_title' | t }}</h2>
+          {%- if form.errors -%}
+            <div class="form__message" role="alert">
+              <h3 class="form-status caption-large text-body" tabindex="-1" autofocus>
+                <span class="svg-wrapper">{{- 'icon-error.svg' | inline_asset_content -}}</span>
+                {{ 'templates.contact.form.error_heading' | t }}
+              </h3>
+            </div>
+            <ul class="form-status-list caption-large">
+              {%- for field in form.errors -%}
+                <li>
+                  <a href="#CommentForm-{{ field }}" class="link">
+                    {%- if form.errors.translated_fields[field] contains 'author' -%}{{ 'blogs.article.name' | t }}
+                    {%- elsif form.errors.translated_fields[field] contains 'body' -%}{{ 'blogs.article.message' | t }}
+                    {%- else -%}{{ form.errors.translated_fields[field] }}{%- endif -%}
+                    {{ form.errors.messages[field] }}
+                  </a>
+                </li>
+              {%- endfor -%}
+            </ul>
+          {%- elsif form.posted_successfully? -%}
+            <div class="form-status-list form__message" role="status">
+              <h3 class="form-status" tabindex="-1" autofocus>
+                <span class="svg-wrapper">{{- 'icon-success.svg' | inline_asset_content -}}</span>
+                {{ post_message | t }}
+              </h3>
+            </div>
+          {%- endif -%}
+          <div {% if blog.moderated? == false %}class="article-template__comments-fields"{% endif %}>
+            <div class="article-template__comment-fields">
+              <div class="field field--with-error">
+                <input type="text" name="comment[author]" id="CommentForm-author" class="field__input" autocomplete="name" value="{{ form.author }}" aria-required="true" required {% if form.errors contains 'author' %}aria-invalid="true" aria-describedby="CommentForm-author-error"{% endif %} placeholder="{{ 'blogs.article.name' | t }}">
+                <label class="field__label" for="CommentForm-author">{{- 'blogs.article.name' | t }} <span aria-hidden="true">*</span></label>
+                {%- if form.errors contains 'author' -%}
+                  <small id="CommentForm-author-error"><span class="form__message"><span class="svg-wrapper">{{- 'icon-error.svg' | inline_asset_content -}}</span>{{- 'blogs.article.name' | t }} {{ form.errors.messages.author }}.</span></small>
+                {%- endif -%}
+              </div>
+              <div class="field field--with-error">
+                <input type="email" name="comment[email]" id="CommentForm-email" autocomplete="email" class="field__input" value="{{ form.email }}" autocorrect="off" autocapitalize="off" aria-required="true" required {% if form.errors contains 'email' %}aria-invalid="true" aria-describedby="CommentForm-email-error"{% endif %} placeholder="{{ 'blogs.article.email' | t }}">
+                <label class="field__label" for="CommentForm-email">{{- 'blogs.article.email' | t }} <span aria-hidden="true">*</span></label>
+                {%- if form.errors contains 'email' -%}
+                  <small id="CommentForm-email-error"><span class="form__message"><span class="svg-wrapper">{{- 'icon-error.svg' | inline_asset_content -}}</span>{{- 'blogs.article.email' | t }} {{ form.errors.messages.email }}.</span></small>
+                {%- endif -%}
+              </div>
+            </div>
+            <div class="field field--with-error">
+              <textarea rows="5" name="comment[body]" id="CommentForm-body" class="text-area field__input" aria-required="true" required {% if form.errors contains 'body' %}aria-invalid="true" aria-describedby="CommentForm-body-error"{% endif %} placeholder="{{ 'blogs.article.message' | t }}">{{ form.body }}</textarea>
+              <label class="form__label field__label" for="CommentForm-body">{{- 'blogs.article.message' | t }} <span aria-hidden="true">*</span></label>
+            </div>
+            {%- if form.errors contains 'body' -%}
+              <small id="CommentForm-body-error"><span class="form__message"><span class="svg-wrapper">{{- 'icon-error.svg' | inline_asset_content -}}</span>{{- 'blogs.article.message' | t }} {{ form.errors.messages.body }}.</span></small>
+            {%- endif -%}
+          </div>
+          {%- if blog.moderated? -%}
+            <p class="article-template__comment-warning caption">{{ 'blogs.article.moderated' | t }}</p>
+          {%- endif -%}
+          <input type="submit" class="button" value="{{ 'blogs.article.post' | t }}">
+        {% endform %}
+      </div>
+    </div>
+  {%- endif -%}
+</article>
+
+{% comment %} Default structured_data removed - custom Article schema in snippets/seo-schema.liquid {% endcomment %}
+
+<script>
+  (function() {
+    'use strict';
+
+    /* ===== Move the CTA banner to just before the FAQ block (fallback: stays at end of content) ===== */
+    function placeCtaBeforeFaq() {
+      var cta = document.getElementById('articleCtaBanner');
+      var content = document.querySelector('.article-template__content');
+      if (!cta || !content) return;
+
+      /* The blog automation already injects a contextual CTA box inside the article.
+         If one exists, hide our generic banner so there is only ONE call-to-action. */
+      var inlineCta = content.querySelector('div[style*="0f172a"]');
+      if (inlineCta) { cta.style.display = 'none'; return; }
+
+      var faqEl = content.querySelector('.faq-section');
+      if (!faqEl) {
+        var firstItem = content.querySelector('.faq-item');
+        if (firstItem) {
+          var p = firstItem.previousElementSibling;
+          while (p) { if (p.tagName === 'H2') { faqEl = p; break; } p = p.previousElementSibling; }
+          if (!faqEl) faqEl = firstItem;
+        }
+      }
+      if (!faqEl) {
+        var hs = content.querySelectorAll('h2');
+        for (var i = 0; i < hs.length; i++) {
+          if (/frequently asked|^faq\b|\bfaqs?\b/i.test(hs[i].textContent)) { faqEl = hs[i]; break; }
+        }
+      }
+      if (faqEl) {
+        faqEl.parentNode.insertBefore(cta, faqEl);
+      }
+    }
+
+    /* ===== Build the sticky table of contents from H2 headings + scroll-spy ===== */
+    function initToc() {
+      var content = document.querySelector('.article-template__content');
+      var nav = document.getElementById('articleToc');
+      var grid = document.getElementById('articleGrid');
+      if (!content || !nav) return;
+
+      var list = nav.querySelector('.article-toc__list');
+      var heads = [].slice.call(content.querySelectorAll('h2')).filter(function(h) {
+        return h.textContent.trim().length > 1;
+      });
+
+      if (heads.length < 2) {
+        if (grid) grid.classList.add('no-toc');
+        return;
+      }
+
+      var items = [];
+      heads.forEach(function(h, i) {
+        if (!h.id) {
+          var slug = h.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48);
+          h.id = 'sec-' + (i + 1) + (slug ? '-' + slug : '');
+        }
+        var li = document.createElement('li');
+        li.className = 'article-toc__item';
+        var a = document.createElement('a');
+        a.className = 'article-toc__link';
+        a.href = '#' + h.id;
+        a.appendChild(document.createTextNode(h.textContent.trim()));
+        a.addEventListener('click', function(e) {
+          e.preventDefault();
+          var target = document.getElementById(h.id);
+          if (target) {
+            var y = target.getBoundingClientRect().top + window.pageYOffset - 96;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+            if (history.replaceState) history.replaceState(null, '', '#' + h.id);
+          }
+        });
+        li.appendChild(a);
+        list.appendChild(li);
+        items.push({ li: li, h: h });
+      });
+
+      nav.hidden = false;
+
+      var ticking = false;
+      function spy() {
+        ticking = false;
+        var active = 0;
+        for (var i = 0; i < items.length; i++) {
+          if (items[i].h.getBoundingClientRect().top <= 140) active = i; else break;
+        }
+        for (var j = 0; j < items.length; j++) {
+          items[j].li.classList.toggle('is-active', j === active);
+        }
+      }
+      window.addEventListener('scroll', function() {
+        if (!ticking) { ticking = true; requestAnimationFrame(spy); }
+      }, { passive: true });
+      spy();
+    }
+
+    function initArticleFaqAccordion() {
+      var contentEl = document.querySelector('.article-template__content');
+      if (!contentEl) return;
+
+      var faqData = [];
+
+      /* ---- Pattern 1: div.faq-section with h3 + p ---- */
+      var faqSections = contentEl.querySelectorAll('.faq-section');
+      faqSections.forEach(function(section) {
+        var heading = section.querySelector('h2');
+        var headingText = heading ? heading.textContent.trim() : 'Frequently Asked Questions';
+
+        var h3s = section.querySelectorAll('h3');
+        if (h3s.length === 0) return;
+
+        var accordionWrap = document.createElement('div');
+        accordionWrap.className = 'article-faq-accordion';
+
+        h3s.forEach(function(h3) {
+          var question = h3.textContent.trim();
+          var answerParts = [];
+          var nextEl = h3.nextElementSibling;
+          while (nextEl && nextEl.tagName !== 'H3' && nextEl.tagName !== 'H2') {
+            answerParts.push(nextEl.outerHTML);
+            nextEl = nextEl.nextElementSibling;
+          }
+          var answerHTML = answerParts.join('');
+          var answerText = answerParts.map(function(h) {
+            var tmp = document.createElement('div');
+            tmp.innerHTML = h;
+            return tmp.textContent.trim();
+          }).join(' ');
+
+          faqData.push({ question: question, answer: answerText });
+
+          var details = document.createElement('details');
+          var summary = document.createElement('summary');
+          summary.innerHTML = '<span class="faq-accordion__question">' + escapeHTML(question) + '</span><span class="faq-accordion__icon" aria-hidden="true"></span>';
+          var answerDiv = document.createElement('div');
+          answerDiv.className = 'faq-accordion__answer';
+          answerDiv.innerHTML = answerHTML;
+
+          details.appendChild(summary);
+          details.appendChild(answerDiv);
+          accordionWrap.appendChild(details);
+        });
+
+        /* Replace original content: keep the heading, replace Q&A with accordion */
+        var parent = section;
+        /* Clear out old Q&A, keep heading */
+        while (parent.firstChild) { parent.removeChild(parent.firstChild); }
+        if (heading) parent.appendChild(heading);
+        parent.appendChild(accordionWrap);
+      });
+
+      /* ---- Pattern 2: div.faq-item wrappers ---- */
+      var faqItems = contentEl.querySelectorAll('.faq-item');
+      if (faqItems.length > 0) {
+        /* Find the heading before faq-items (usually h2) */
+        var firstItem = faqItems[0];
+        var prevSibling = firstItem.previousElementSibling;
+        var faqHeading = null;
+        while (prevSibling) {
+          if (prevSibling.tagName === 'H2') {
+            faqHeading = prevSibling;
+            break;
+          }
+          prevSibling = prevSibling.previousElementSibling;
+        }
+
+        var accordionWrap2 = document.createElement('div');
+        accordionWrap2.className = 'article-faq-accordion';
+
+        faqItems.forEach(function(item) {
+          var h3 = item.querySelector('h3');
+          if (!h3) return;
+          var question = h3.textContent.trim();
+
+          /* Collect answer: everything after h3 */
+          var answerParts = [];
+          var nextEl = h3.nextElementSibling;
+          while (nextEl) {
+            answerParts.push(nextEl.outerHTML);
+            nextEl = nextEl.nextElementSibling;
+          }
+          var answerHTML = answerParts.join('');
+          var answerText = answerParts.map(function(h) {
+            var tmp = document.createElement('div');
+            tmp.innerHTML = h;
+            return tmp.textContent.trim();
+          }).join(' ');
+
+          faqData.push({ question: question, answer: answerText });
+
+          var details = document.createElement('details');
+          var summary = document.createElement('summary');
+          summary.innerHTML = '<span class="faq-accordion__question">' + escapeHTML(question) + '</span><span class="faq-accordion__icon" aria-hidden="true"></span>';
+          var answerDiv = document.createElement('div');
+          answerDiv.className = 'faq-accordion__answer';
+          answerDiv.innerHTML = answerHTML;
+
+          details.appendChild(summary);
+          details.appendChild(answerDiv);
+          accordionWrap2.appendChild(details);
+        });
+
+        /* Insert accordion after heading, remove old faq-items */
+        var insertRef = faqHeading ? faqHeading.nextSibling : firstItem;
+        firstItem.parentNode.insertBefore(accordionWrap2, insertRef);
+        faqItems.forEach(function(item) { item.remove(); });
+      }
+
+      /* ---- Pattern 3: plain "<h2>FAQ</h2>" followed by <h3>Q</h3> + answer elements (no wrapper) ---- */
+      if (faqData.length === 0) {
+        var allH2 = contentEl.querySelectorAll('h2');
+        var faqH2 = null;
+        for (var hi = 0; hi < allH2.length; hi++) {
+          var t = allH2[hi].textContent.trim();
+          if (/frequently asked/i.test(t) || /^faqs?$/i.test(t) || /^faq\b/i.test(t)) { faqH2 = allH2[hi]; break; }
+        }
+        if (faqH2) {
+          var wrap3 = document.createElement('div');
+          wrap3.className = 'article-faq-accordion';
+          var toRemove = [];
+          var node = faqH2.nextElementSibling;
+          while (node && node.tagName !== 'H2') {
+            if (node.tagName === 'H3') {
+              var question = node.textContent.trim();
+              var parts = [];
+              var ans = node.nextElementSibling;
+              while (ans && ans.tagName !== 'H3' && ans.tagName !== 'H2') {
+                parts.push(ans.outerHTML);
+                toRemove.push(ans);
+                ans = ans.nextElementSibling;
+              }
+              var ansHTML = parts.join('');
+              var ansText = parts.map(function(h) { var d = document.createElement('div'); d.innerHTML = h; return d.textContent.trim(); }).join(' ');
+              faqData.push({ question: question, answer: ansText });
+
+              var details3 = document.createElement('details');
+              var summary3 = document.createElement('summary');
+              summary3.innerHTML = '<span class="faq-accordion__question">' + escapeHTML(question) + '</span><span class="faq-accordion__icon" aria-hidden="true"></span>';
+              var ansDiv3 = document.createElement('div');
+              ansDiv3.className = 'faq-accordion__answer';
+              ansDiv3.innerHTML = ansHTML;
+              details3.appendChild(summary3);
+              details3.appendChild(ansDiv3);
+              wrap3.appendChild(details3);
+
+              toRemove.push(node);
+              node = ans;
+            } else {
+              node = node.nextElementSibling;
+            }
+          }
+          if (wrap3.children.length > 0) {
+            faqH2.parentNode.insertBefore(wrap3, faqH2.nextSibling);
+            toRemove.forEach(function(el) { if (el && el.parentNode) el.parentNode.removeChild(el); });
+          }
+        }
+      }
+
+      /* ---- Generate FAQ Schema.org structured data for SEO ---- */
+      if (faqData.length > 0) {
+        var schema = {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          'mainEntity': faqData.map(function(item) {
+            return {
+              '@type': 'Question',
+              'name': item.question,
+              'acceptedAnswer': {
+                '@type': 'Answer',
+                'text': item.answer
+              }
+            };
+          })
+        };
+        var scriptTag = document.createElement('script');
+        scriptTag.type = 'application/ld+json';
+        scriptTag.textContent = JSON.stringify(schema);
+        document.head.appendChild(scriptTag);
+      }
+    }
+
+    function escapeHTML(str) {
+      var div = document.createElement('div');
+      div.appendChild(document.createTextNode(str));
+      return div.innerHTML;
+    }
+
+    function initArticle() {
+      placeCtaBeforeFaq();
+      initArticleFaqAccordion();
+      initToc();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initArticle);
+    } else {
+      initArticle();
+    }
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "t:sections.main-article.name",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "CTA banner (before FAQ)"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "Label",
+      "default": "Get started"
+    },
+    {
+      "type": "text",
+      "id": "cta_text",
+      "label": "Main text",
+      "default": "Start your online business today."
+    },
+    {
+      "type": "text",
+      "id": "cta_bold",
+      "label": "Bold text (second line)",
+      "default": "For free."
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "Button URL"
+    },
+    {
+      "type": "text",
+      "id": "cta_btn",
+      "label": "Button label",
+      "default": "Start for free"
+    },
+    {
+      "type": "header",
+      "content": "Author byline"
+    },
+    {
+      "type": "text",
+      "id": "author_name",
+      "label": "Author name",
+      "default": "Evgeniy Milievich"
+    },
+    {
+      "type": "text",
+      "id": "author_role",
+      "label": "Author role / title",
+      "default": "Founder, MILEDEVS"
+    },
+    {
+      "type": "image_picker",
+      "id": "author_avatar",
+      "label": "Author photo (optional)"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "@app"
+    },
+    {
+      "type": "featured_image",
+      "name": "t:sections.main-article.blocks.featured_image.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "select",
+          "id": "image_height",
+          "options": [
+            {
+              "value": "adapt",
+              "label": "t:sections.main-article.blocks.featured_image.settings.image_height.options__1.label"
+            },
+            {
+              "value": "small",
+              "label": "t:sections.main-article.blocks.featured_image.settings.image_height.options__2.label"
+            },
+            {
+              "value": "medium",
+              "label": "t:sections.main-article.blocks.featured_image.settings.image_height.options__3.label"
+            },
+            {
+              "value": "large",
+              "label": "t:sections.main-article.blocks.featured_image.settings.image_height.options__4.label"
+            }
+          ],
+          "default": "adapt",
+          "label": "t:sections.main-article.blocks.featured_image.settings.image_height.label"
+        }
+      ]
+    },
+    {
+      "type": "title",
+      "name": "t:sections.main-article.blocks.title.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "blog_show_date",
+          "default": true,
+          "label": "t:sections.main-article.blocks.title.settings.blog_show_date.label"
+        },
+        {
+          "type": "checkbox",
+          "id": "blog_show_author",
+          "default": false,
+          "label": "t:sections.main-article.blocks.title.settings.blog_show_author.label"
+        }
+      ]
+    },
+    {
+      "type": "content",
+      "name": "t:sections.main-article.blocks.content.name",
+      "limit": 1
+    },
+    {
+      "type": "share",
+      "name": "t:sections.main-article.blocks.share.name",
+      "limit": 2,
+      "settings": [
+        {
+          "type": "text",
+          "id": "share_label",
+          "label": "t:sections.main-article.blocks.share.settings.text.label",
+          "default": "t:sections.main-article.blocks.share.settings.text.default"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

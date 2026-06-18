@@ -1,0 +1,513 @@
+{% liquid
+  assign sid = section.id
+%}
+
+<style>
+  .faq-accordion {
+    font-family: 'Kumbh Sans', sans-serif;
+    box-sizing: border-box;
+  }
+
+  .faq-accordion *,
+  .faq-accordion *::before,
+  .faq-accordion *::after {
+    box-sizing: inherit;
+  }
+
+  .faq-accordion__container {
+    margin: 0 auto;
+  }
+
+  .faq-accordion__header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .faq-accordion__title {
+    margin: 0 0 12px;
+    line-height: 1.2;
+    font-weight: 300;
+  }
+
+  .faq-accordion__title p {
+    margin: 0;
+  }
+
+  .faq-accordion__subtitle {
+    margin: 0;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  .faq-accordion__subtitle p {
+    margin: 0;
+  }
+
+  .faq-accordion__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .faq-accordion__item {
+    border-bottom: 1px solid rgba(55, 58, 54, 0.15);
+  }
+
+  .faq-accordion__question {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 20px 0;
+    cursor: pointer;
+    font-family: 'Kumbh Sans', sans-serif;
+    font-weight: 700;
+    line-height: 1.4;
+    text-align: left;
+    gap: 16px;
+    transition: opacity 0.2s ease;
+  }
+
+  .faq-accordion__question:hover {
+    opacity: 0.7;
+  }
+
+  .faq-accordion__question:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+
+  .faq-accordion__icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    position: relative;
+    transition: transform 0.3s ease;
+  }
+
+  .faq-accordion__icon::before,
+  .faq-accordion__icon::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background: currentColor;
+    transition: transform 0.3s ease;
+  }
+
+  .faq-accordion__icon::before {
+    width: 16px;
+    height: 2px;
+    transform: translate(-50%, -50%);
+  }
+
+  .faq-accordion__icon::after {
+    width: 2px;
+    height: 16px;
+    transform: translate(-50%, -50%);
+  }
+
+  .faq-accordion__item.is-active .faq-accordion__icon::after {
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+
+  .faq-accordion__item.is-active .faq-accordion__icon {
+    transform: rotate(45deg);
+  }
+
+  .faq-accordion__answer-wrap {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.35s ease;
+  }
+
+  .faq-accordion__answer {
+    padding: 0 0 20px;
+    font-weight: 400;
+    line-height: 1.7;
+  }
+
+  .faq-accordion__answer p {
+    margin: 0 0 8px;
+  }
+
+  .faq-accordion__answer p:last-child {
+    margin-bottom: 0;
+  }
+</style>
+
+<style>
+  .faq-accordion-{{ sid }} {
+    --faq-bg: {{ section.settings.bg_color }};
+    --faq-title-color: {{ section.settings.title_color }};
+    --faq-subtitle-color: {{ section.settings.subtitle_color | default: section.settings.title_color }};
+    --faq-question-color: {{ section.settings.question_color }};
+    --faq-answer-color: {{ section.settings.answer_color }};
+    --faq-max-w: {{ section.settings.max_width }}px;
+    --faq-title-size-d: {{ section.settings.title_size_desktop }}px;
+    --faq-title-size-m: {{ section.settings.title_size_mobile }}px;
+    --faq-subtitle-size-d: {{ section.settings.subtitle_size_desktop }}px;
+    --faq-subtitle-size-m: {{ section.settings.subtitle_size_mobile }}px;
+    --faq-question-size-d: {{ section.settings.question_size_desktop }}px;
+    --faq-question-size-m: {{ section.settings.question_size_mobile }}px;
+    --faq-answer-size-d: {{ section.settings.answer_size_desktop }}px;
+    --faq-answer-size-m: {{ section.settings.answer_size_mobile }}px;
+  }
+
+  .faq-accordion-{{ sid }} {
+    background: var(--faq-bg);
+    padding: {{ section.settings.pt_mobile }}px {{ section.settings.ph_mobile }}px {{ section.settings.pb_mobile }}px;
+  }
+
+  .faq-accordion-{{ sid }} .faq-accordion__container {
+    max-width: var(--faq-max-w);
+  }
+
+  .faq-accordion-{{ sid }} .faq-accordion__title {
+    font-size: var(--faq-title-size-m);
+    color: var(--faq-title-color);
+  }
+
+  .faq-accordion-{{ sid }} .faq-accordion__subtitle {
+    font-size: var(--faq-subtitle-size-m);
+    color: var(--faq-subtitle-color);
+  }
+
+  .faq-accordion-{{ sid }} .faq-accordion__question {
+    font-size: var(--faq-question-size-m);
+    color: var(--faq-question-color);
+  }
+
+  .faq-accordion-{{ sid }} .faq-accordion__answer {
+    font-size: var(--faq-answer-size-m);
+    color: var(--faq-answer-color);
+  }
+
+  @media (min-width: 750px) {
+    .faq-accordion-{{ sid }} {
+      padding: {{ section.settings.pt_desktop }}px {{ section.settings.ph_desktop }}px {{ section.settings.pb_desktop }}px;
+    }
+
+    .faq-accordion-{{ sid }} .faq-accordion__title {
+      font-size: var(--faq-title-size-d);
+    }
+
+    .faq-accordion-{{ sid }} .faq-accordion__subtitle {
+      font-size: var(--faq-subtitle-size-d);
+    }
+
+    .faq-accordion-{{ sid }} .faq-accordion__question {
+      font-size: var(--faq-question-size-d);
+    }
+
+    .faq-accordion-{{ sid }} .faq-accordion__answer {
+      font-size: var(--faq-answer-size-d);
+    }
+  }
+</style>
+
+<section
+  id="faq-accordion-{{ sid }}"
+  class="faq-accordion faq-accordion-{{ sid }}{% if section.settings.custom_classes != blank %} {{ section.settings.custom_classes }}{% endif %}"
+  aria-label="{{ section.settings.title | default: 'FAQ' | strip_html }}"
+>
+  <div class="faq-accordion__container">
+    {% if section.settings.title != blank or section.settings.subtitle != blank %}
+      <div class="faq-accordion__header">
+        {% if section.settings.title != blank %}
+          <h2 class="faq-accordion__title">{{ section.settings.title }}</h2>
+        {% endif %}
+        {% if section.settings.subtitle != blank %}
+          <div class="faq-accordion__subtitle">{{ section.settings.subtitle }}</div>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if section.blocks.size > 0 %}
+      <ul class="faq-accordion__list" role="list">
+        {% for block in section.blocks %}
+          {% if block.settings.question != blank %}
+            <li class="faq-accordion__item" {{ block.shopify_attributes }}>
+              <button
+                class="faq-accordion__question"
+                type="button"
+                aria-expanded="false"
+                aria-controls="faq-answer-{{ sid }}-{{ forloop.index }}"
+              >
+                <span>{{ block.settings.question }}</span>
+                <span class="faq-accordion__icon" aria-hidden="true"></span>
+              </button>
+              <div
+                id="faq-answer-{{ sid }}-{{ forloop.index }}"
+                class="faq-accordion__answer-wrap"
+                role="region"
+              >
+                <div class="faq-accordion__answer">
+                  {{ block.settings.answer }}
+                </div>
+              </div>
+            </li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+</section>
+
+<script>
+  (function() {
+    var section = document.getElementById('faq-accordion-{{ sid }}');
+    if (!section) return;
+
+    var items = section.querySelectorAll('.faq-accordion__item');
+
+    items.forEach(function(item) {
+      var btn = item.querySelector('.faq-accordion__question');
+      var wrap = item.querySelector('.faq-accordion__answer-wrap');
+
+      btn.addEventListener('click', function() {
+        var isActive = item.classList.contains('is-active');
+
+        items.forEach(function(otherItem) {
+          var otherWrap = otherItem.querySelector('.faq-accordion__answer-wrap');
+          var otherBtn = otherItem.querySelector('.faq-accordion__question');
+          otherItem.classList.remove('is-active');
+          otherBtn.setAttribute('aria-expanded', 'false');
+          otherWrap.style.maxHeight = null;
+        });
+
+        if (!isActive) {
+          item.classList.add('is-active');
+          btn.setAttribute('aria-expanded', 'true');
+          wrap.style.maxHeight = wrap.scrollHeight + 'px';
+        }
+      });
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "FAQ Accordion",
+  "tag": "div",
+  "class": "faq-accordion-section",
+  "settings": [
+    {
+      "type": "richtext",
+      "id": "title",
+      "label": "Title"
+    },
+    {
+      "type": "richtext",
+      "id": "subtitle",
+      "label": "Subtitle"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title color",
+      "default": "#373a36"
+    },
+    {
+      "type": "color",
+      "id": "subtitle_color",
+      "label": "Subtitle color",
+      "default": "#373a36"
+    },
+    {
+      "type": "color",
+      "id": "question_color",
+      "label": "Question color",
+      "default": "#373a36"
+    },
+    {
+      "type": "color",
+      "id": "answer_color",
+      "label": "Answer color",
+      "default": "#373a36"
+    },
+    {
+      "type": "range",
+      "id": "title_size_desktop",
+      "label": "Title size desktop",
+      "min": 16,
+      "max": 72,
+      "step": 1,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "title_size_mobile",
+      "label": "Title size mobile",
+      "min": 14,
+      "max": 48,
+      "step": 1,
+      "unit": "px",
+      "default": 28
+    },
+    {
+      "type": "range",
+      "id": "subtitle_size_desktop",
+      "label": "Subtitle size desktop",
+      "min": 12,
+      "max": 32,
+      "step": 1,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "subtitle_size_mobile",
+      "label": "Subtitle size mobile",
+      "min": 12,
+      "max": 28,
+      "step": 1,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "question_size_desktop",
+      "label": "Question size desktop",
+      "min": 14,
+      "max": 32,
+      "step": 1,
+      "unit": "px",
+      "default": 18
+    },
+    {
+      "type": "range",
+      "id": "question_size_mobile",
+      "label": "Question size mobile",
+      "min": 14,
+      "max": 28,
+      "step": 1,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "answer_size_desktop",
+      "label": "Answer size desktop",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "answer_size_mobile",
+      "label": "Answer size mobile",
+      "min": 12,
+      "max": 22,
+      "step": 1,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "text",
+      "id": "max_width",
+      "label": "Section max width (px)",
+      "default": "800"
+    },
+    {
+      "type": "range",
+      "id": "pt_desktop",
+      "label": "Padding top desktop",
+      "min": 0,
+      "max": 200,
+      "step": 2,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "pb_desktop",
+      "label": "Padding bottom desktop",
+      "min": 0,
+      "max": 200,
+      "step": 2,
+      "unit": "px",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "ph_desktop",
+      "label": "Padding horizontal desktop",
+      "min": 0,
+      "max": 100,
+      "step": 2,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "pt_mobile",
+      "label": "Padding top mobile",
+      "min": 0,
+      "max": 100,
+      "step": 2,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "pb_mobile",
+      "label": "Padding bottom mobile",
+      "min": 0,
+      "max": 100,
+      "step": 2,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "ph_mobile",
+      "label": "Padding horizontal mobile",
+      "min": 0,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "text",
+      "id": "custom_classes",
+      "label": "Custom classes"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "faq_item",
+      "name": "FAQ Item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "question",
+          "label": "Question"
+        },
+        {
+          "type": "richtext",
+          "id": "answer",
+          "label": "Answer"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "FAQ Accordion"
+    }
+  ]
+}
+{% endschema %}

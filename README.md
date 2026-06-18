@@ -67,6 +67,28 @@ acts as both the content calendar and the pipeline state machine.
 
 ---
 
+## Rendering layer (Shopify theme) — technical SEO
+
+The functions publish **clean HTML** on purpose: no `<h1>`, no `<script>`, no
+JSON-LD. The *technical SEO* and presentation are rendered by the Shopify theme,
+and those files ship in [`shopify-theme/`](shopify-theme/):
+
+- **`snippets/seo-schema.liquid`** — all JSON-LD structured data (`Organization`,
+  `WebSite`, `BreadcrumbList`, `FAQPage`, and **`Article`** on post pages).
+- **`snippets/meta-tags.liquid`** — title / meta description / Open Graph / canonical.
+- **`sections/main-article.liquid`** — the article page: **sticky auto Table of
+  Contents with scroll-spy**, author byline, reading time, CTA banner, FAQ
+  accordion, related posts (Dawn-based, dark theme).
+- **`templates/article.json` / `blog.json`**, blog index + card sections, FAQ
+  sections and their CSS/JS.
+
+So the pipeline is two halves that pair up: the **functions generate the content**
+(incl. the in-body TOC anchors and answer-first/FAQ HTML), and the **theme renders
+the SEO scaffolding** (schema, sticky TOC, meta) around it. See
+[`shopify-theme/README.md`](shopify-theme/README.md) for install steps.
+
+---
+
 ## Tech stack
 
 - **Runtime:** Supabase Edge Functions (Deno, TypeScript)
